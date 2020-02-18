@@ -1,5 +1,14 @@
 # robo-advisor
 
+
+## API Setup 
+
+visit "API website"
+
+create a .env file in your text editor or through command line
+
+
+
 ### Environment Setup
 
 Create and activate a new Anaconda virtual environment:

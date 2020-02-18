@@ -17,8 +17,22 @@ print("URL:", request_url)
 
 response = requests.get(request_url)
 
+#input validation
+
+if "Error Message" in response.text:
+    print("There is an error with either your inputted ticker or api key.")
+    print("Please look into both and try again")
+    exit()
+
+
 parsed_response = json.loads(response.text)
 print(parsed_response)
+breakpoint()
+
+tsd = parsed_response["Time Series (Daily)"]
+
+for date, prices in tsd.items():
+    print(date)
 
 
 
