@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 import csv
 from keyword import iskeyword
+import plotly
+import plotly.graph_objs as go
 
 load_dotenv()
 
@@ -22,7 +24,7 @@ def to_usd(my_price):
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
 print("This application gathers a company's recent stock data, stores the data in a CSV file, and outputs a recommendation for purchase.")
-print("You may enter as many stock tickers as you please.")
+print("You may enter at most 5 stock tickers per minute.")
 print("Enter the tickers one by one. Enter 'DONE' when you are finished entering tickers.")
 print("Thank you!")
 
@@ -38,7 +40,7 @@ def hasNumbers(inputString):
      return any(char.isdigit() for char in inputString)
 
 while True:
-    TICKER = input("Please enter a company's ticker:  ")
+    TICKER = input("Please enter a company's ticker: ")
     if TICKER.upper() == "DONE":
         break
     elif len(TICKER) > ticker_max or len(TICKER) < 1:
@@ -66,6 +68,10 @@ for TICKER in ticker_list:
         print("___________________________________")
         continue
 
+    if "higher API call frequency" in response.text:
+        print("Error")
+        print(response.text)
+        exit()
 
     parsed_response = json.loads(response.text)
     #print(parsed_response)
@@ -77,6 +83,8 @@ for TICKER in ticker_list:
     recent_close = tsd[str(date[0])]["4. close"]
     latest_date = date[0]
 
+
+    #this and the following for loop creates lists parallel to the date list
     open_p = []
     high = []
     low = []
@@ -101,23 +109,25 @@ for TICKER in ticker_list:
     #print(close)
     #print(volume)
 
+    #this code cuts the date variable into three variables
     #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
     current_year = int(date[0][0:4]) 
     current_month = date[0][5:7]
     current_day = date[0][8:10]
 
+    #this code finds the date a year ago today
     past_year = current_year - 1
     past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" #format
     
-    print(current_year)
-    print(type(current_month))
-    print(current_month)
-    print(current_day)
-    print(past_year)
-    print(past_date)
+    #print(current_year)
+    #print(type(current_month))
+    #print(current_month)
+    #print(current_day)
+    #print(past_year)
+    #print(past_date)
 
-    #the following code checks if there is market data for a year prior to the last market data
-    #if there is no market data a year ago exactly, the day prior is checked until a valid date is found
+    #the following code checks if there is market data for the date exactly one year ago
+    #if there is no market data one year ago exactly, the day prior is checked until a valid date is found
     while past_date not in date:
         if current_day == "01":
             current_month = f"0{str(int(current_month) - 1)}"
@@ -166,6 +176,8 @@ for TICKER in ticker_list:
 
 
     print("-------------------------")
+    next_output = input("Press enter to see my stock recommendation.")
+    print("-------------------------")
     print(f"SELECTED SYMBOL: {TICKER}")
     print("-------------------------")
     print("REQUESTING STOCK MARKET DATA...")
@@ -181,5 +193,13 @@ for TICKER in ticker_list:
     print("-------------------------")
     print(f"Writing to a CSV file: {csv_file_path} ... ")
     print("-------------------------")
+
+    # adapted from: https://plot.ly/python/getting-started/#initialization-for-offline-plotting
+    plotly.offline.plot({
+    "data": [go.Scatter(x= date, y= close)],
+    "layout": go.Layout(title=f"Stock Price over Time: {TICKER.upper()}")
+    }, auto_open=True)
+
     print("HAPPY INVESTING!")
     print("-------------------------")
+
