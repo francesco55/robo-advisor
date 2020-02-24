@@ -5,6 +5,7 @@ import json
 import os
 from dotenv import load_dotenv
 import csv
+from keyword import iskeyword
 
 load_dotenv()
 
@@ -24,14 +25,22 @@ print("REQUESTING SOME DATA FROM THE INTERNET...")
 
 TICKER = input("Please enter the company's ticker.")
 #ticker validation
+
 ticker_max = 4
-if type(TICKER) == str:
-    if len(TICKER) > ticker_max:
-        print("This is not a valid ticker")
+if len(TICKER) > ticker_max:
+        print("This is not a valid ticker, it exceeds the maximum length.")
+        print("Please run the program again with a valid ticker.")
         exit()
-else:
-    print("this is not a valid ticker")
+
+#https://stackoverflow.com/questions/19859282/check-if-a-string-contains-a-number
+def hasNumbers(inputString):
+     return any(char.isdigit() for char in inputString)
+
+if hasNumbers(TICKER):
+    print("This is not a valid ticker, it contains a number.")
+    print("Please run the program again with a valid ticker.")
     exit()
+
 
 request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}"
 print("URL:", request_url)
@@ -90,7 +99,7 @@ recent_low = min(low)
 
 #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
 #writes data into csv file
-csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
+csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER}_prices.csv")
 
 csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
 
