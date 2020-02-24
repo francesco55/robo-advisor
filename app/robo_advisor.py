@@ -21,119 +21,129 @@ def to_usd(my_price):
 
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
-print("REQUESTING SOME DATA FROM THE INTERNET...")
+print("This application gathers a company's recent stock data, stores the data in a CSV file, and outputs a recommendation for purchase.")
+print("You may enter as many stock tickers as you please.")
+print("Enter the tickers one by one. Enter 'DONE' when you are finished entering tickers.")
+print("Thank you!")
 
-TICKER = input("Please enter the company's ticker.")
-#ticker validation
 
+#adapted from shopping_cart.py
+#multiple tickers input and validation
+
+ticker_list = []
 ticker_max = 5
-if len(TICKER) > ticker_max or len(TICKER) < 1:
-        print("This is not a valid ticker, it is an incorrect length.")
-        print("Please run the program again with a valid ticker.")
-        exit()
 
 #https://stackoverflow.com/questions/19859282/check-if-a-string-contains-a-number
 def hasNumbers(inputString):
      return any(char.isdigit() for char in inputString)
 
-if hasNumbers(TICKER):
-    print("This is not a valid ticker, it contains a number.")
-    print("Please run the program again with a valid ticker.")
-    exit()
+while True:
+    TICKER = input("Please enter a company's ticker:  ")
+    if TICKER.upper() == "DONE":
+        break
+    elif len(TICKER) > ticker_max or len(TICKER) < 1:
+        print("This is not a valid ticker, it is an incorrect length.")
+        print("Please enter a valid ticker.")
+    elif hasNumbers(TICKER):
+        print("This is not a valid ticker, it contains a number.")
+        print("Please enter a valid ticker.")
+    else:
+        ticker_list.append(TICKER)
+
+for TICKER in ticker_list:
+    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}"
+    print("REQUESTING SOME DATA FROM THE INTERNET...")
+    print("URL:", request_url)
+
+    response = requests.get(request_url)
+
+    #input validation
+
+    if "Error Message" in response.text:
+        print("There is an error with either your inputted ticker or api key.")
+        print("Please look into both and try again")
+        exit()
 
 
-request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}"
-print("URL:", request_url)
+    parsed_response = json.loads(response.text)
+    print(parsed_response)
+    refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
 
-response = requests.get(request_url)
+    tsd = parsed_response["Time Series (Daily)"]
 
-#input validation
+    date = list(tsd.keys()) #https://stackoverflow.com/questions/30362391/how-do-you-find-the-first-key-in-a-dictionary
+    recent_close = tsd[str(date[0])]["4. close"]
+    latest_date = date[0]
 
-if "Error Message" in response.text:
-    print("There is an error with either your inputted ticker or api key.")
-    print("Please look into both and try again")
-    exit()
+    open_p = []
+    high = []
+    low = []
+    close = []
+    volume = []
 
-
-parsed_response = json.loads(response.text)
-print(parsed_response)
-refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
-
-tsd = parsed_response["Time Series (Daily)"]
-
-date = list(tsd.keys()) #https://stackoverflow.com/questions/30362391/how-do-you-find-the-first-key-in-a-dictionary
-recent_close = tsd[str(date[0])]["4. close"]
-latest_date = date[0]
-
-open_p = []
-high = []
-low = []
-close = []
-volume = []
-
-print(date)
-for d in date:
-    current_open = float(tsd[d]["1. open"])
-    open_p.append(current_open)
-    current_high = float(tsd[d]["2. high"])
-    high.append(current_high)
-    current_low = float(tsd[d]["3. low"])
-    low.append(current_low)
-    current_close = float(tsd[d]["4. close"])
-    close.append(current_close)
-    current_volume = float(tsd[d]["5. volume"])
-    volume.append(current_volume)
-
-#print(open_p)
-#print(high)
-#print(low)
-#print(close)
-#print(volume)
-
-recent_high = max(high)
-recent_low = min(low)
-
-
-#for date, prices in tsd.items():
-#    print(date)
-
-#https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
-#writes data into csv file
-csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER}_prices.csv")
-
-csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
-
-with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
-    writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
-    writer.writeheader() # writes header
-    
-    #https://www.youtube.com/watch?v=UXAVOP1oCog&t=847s
+    print(date)
     for d in date:
-        daily_data = tsd[d]
-        writer.writerow({"timestamp": d,
-        "open": daily_data["1. open"],
-        "high": daily_data["2. high"],
-        "low": daily_data["3. low"], 
-        "close": daily_data["4. close"],
-        "volume": daily_data["5. volume"]})
+        current_open = float(tsd[d]["1. open"])
+        open_p.append(current_open)
+        current_high = float(tsd[d]["2. high"])
+        high.append(current_high)
+        current_low = float(tsd[d]["3. low"])
+        low.append(current_low)
+        current_close = float(tsd[d]["4. close"])
+        close.append(current_close)
+        current_volume = float(tsd[d]["5. volume"])
+        volume.append(current_volume)
+
+    #print(open_p)
+    #print(high)
+    #print(low)
+    #print(close)
+    #print(volume)
+
+    recent_high = max(high)
+    recent_low = min(low)
+
+
+    #for date, prices in tsd.items():
+    #    print(date)
+
+    #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
+    #writes data into csv file
+    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER}_prices.csv")
+
+    csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
+
+    with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
+        writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
+        writer.writeheader() # writes header
+
+        #https://www.youtube.com/watch?v=UXAVOP1oCog&t=847s
+        for d in date:
+            daily_data = tsd[d]
+            writer.writerow({"timestamp": d,
+            "open": daily_data["1. open"],
+            "high": daily_data["2. high"],
+            "low": daily_data["3. low"], 
+            "close": daily_data["4. close"],
+            "volume": daily_data["5. volume"]})
 
 
 
-print("-------------------------")
-print(f"SELECTED SYMBOL: {TICKER}")
-print("-------------------------")
-print("REQUESTING STOCK MARKET DATA...")
-print(f"REQUEST AT: {refreshed}")
-print("-------------------------")
-print(f"LATEST DAY: {latest_date}")
-print(f"LATEST CLOSE: {to_usd(float(recent_close))}")
-print(f"RECENT HIGH: {to_usd(float(recent_high))}")
-print(f"RECENT LOW: {to_usd(float(recent_low))}")
-print("-------------------------")
-print("RECOMMENDATION: BUY!")
-print("RECOMMENDATION REASON: TODO")
-print("-------------------------")
-print(f"Writing to a CSV file: {csv_file_path} ... ")
-print("-------------------------")
-print("HAPPY INVESTING!")
-print("-------------------------")
+    print("-------------------------")
+    print(f"SELECTED SYMBOL: {TICKER}")
+    print("-------------------------")
+    print("REQUESTING STOCK MARKET DATA...")
+    print(f"REQUEST AT: {refreshed}")
+    print("-------------------------")
+    print(f"LATEST DAY: {latest_date}")
+    print(f"LATEST CLOSE: {to_usd(float(recent_close))}")
+    print(f"RECENT HIGH: {to_usd(float(recent_high))}")
+    print(f"RECENT LOW: {to_usd(float(recent_low))}")
+    print("-------------------------")
+    print("RECOMMENDATION: BUY!")
+    print("RECOMMENDATION REASON: TODO")
+    print("-------------------------")
+    print(f"Writing to a CSV file: {csv_file_path} ... ")
+    print("-------------------------")
+    print("HAPPY INVESTING!")
+    print("-------------------------")
