@@ -4,6 +4,7 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+import csv
 
 load_dotenv()
 
@@ -61,7 +62,7 @@ low = []
 close = []
 volume = []
 
-
+print(date)
 for d in date:
     current_open = float(tsd[d]["1. open"])
     open_p.append(current_open)
@@ -87,6 +88,26 @@ recent_low = min(low)
 #for date, prices in tsd.items():
 #    print(date)
 
+#https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
+#writes data into csv file
+csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", "prices.csv")
+
+csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
+
+with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
+    writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
+    writer.writeheader() # writes header
+    
+    #https://www.youtube.com/watch?v=UXAVOP1oCog&t=847s
+    for d in date:
+        daily_data = tsd[d]
+        writer.writerow({"timestamp": d,
+        "open": daily_data["1. open"],
+        "high": daily_data["2. high"],
+        "low": daily_data["3. low"], 
+        "close": daily_data["4. close"],
+        "volume": daily_data["5. volume"]})
+
 
 
 print("-------------------------")
@@ -102,6 +123,8 @@ print(f"RECENT LOW: {to_usd(float(recent_low))}")
 print("-------------------------")
 print("RECOMMENDATION: BUY!")
 print("RECOMMENDATION REASON: TODO")
+print("-------------------------")
+print(f"Writing to a CSV file: {csv_file_path} ... ")
 print("-------------------------")
 print("HAPPY INVESTING!")
 print("-------------------------")
