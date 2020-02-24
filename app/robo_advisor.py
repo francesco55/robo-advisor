@@ -60,13 +60,15 @@ for TICKER in ticker_list:
     #input validation
 
     if "Error Message" in response.text:
-        print("There is an error with either your inputted ticker or api key.")
+        print("ERROR")
+        print(f"There is an error with either your inputted ticker ({TICKER}) or api key.")
         print("Please look into both and try again")
-        exit()
+        print("___________________________________")
+        continue
 
 
     parsed_response = json.loads(response.text)
-    print(parsed_response)
+    #print(parsed_response)
     refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
 
     tsd = parsed_response["Time Series (Daily)"]
@@ -81,7 +83,7 @@ for TICKER in ticker_list:
     close = []
     volume = []
 
-    print(date)
+    #print(date)
     for d in date:
         current_open = float(tsd[d]["1. open"])
         open_p.append(current_open)
