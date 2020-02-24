@@ -26,9 +26,9 @@ print("REQUESTING SOME DATA FROM THE INTERNET...")
 TICKER = input("Please enter the company's ticker.")
 #ticker validation
 
-ticker_max = 4
-if len(TICKER) > ticker_max:
-        print("This is not a valid ticker, it exceeds the maximum length.")
+ticker_max = 5
+if len(TICKER) > ticker_max or len(TICKER) < 1:
+        print("This is not a valid ticker, it is an incorrect length.")
         print("Please run the program again with a valid ticker.")
         exit()
 
