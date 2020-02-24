@@ -51,7 +51,7 @@ while True:
         ticker_list.append(TICKER)
 
 for TICKER in ticker_list:
-    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}"
+    request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}&outputsize=full"
     print("REQUESTING SOME DATA FROM THE INTERNET...")
     print("URL:", request_url)
 
@@ -83,7 +83,6 @@ for TICKER in ticker_list:
     close = []
     volume = []
 
-    #print(date)
     for d in date:
         current_open = float(tsd[d]["1. open"])
         open_p.append(current_open)
@@ -102,8 +101,43 @@ for TICKER in ticker_list:
     #print(close)
     #print(volume)
 
-    recent_high = max(high)
-    recent_low = min(low)
+    #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
+    current_year = int(date[0][0:4]) 
+    current_month = date[0][5:7]
+    current_day = date[0][8:10]
+
+    past_year = current_year - 1
+    past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" #format
+    
+    print(current_year)
+    print(type(current_month))
+    print(current_month)
+    print(current_day)
+    print(past_year)
+    print(past_date)
+
+    #the following code checks if there is market data for a year prior to the last market data
+    #if there is no market data a year ago exactly, the day prior is checked until a valid date is found
+    while past_date not in date:
+        if current_day == "01":
+            current_month = f"0{str(int(current_month) - 1)}"
+            if current_month == "02":
+                current_day = "28"
+            elif current_month == "09" or current_month == "04" or current_month == "06" or current_month == "11":
+                current_day = "30"
+            else:
+                current_day = "31"
+        elif current_day[0] == "0":
+            current_day = f"0{str(int(current_day) - 1)}"
+        else:
+            current_day = str(int(current_day) - 1)
+        past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" #format
+
+    #we grab the index of the valid date 52 weeks ago and access the max within that
+    index = date.index(past_date) #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
+
+    recent_high = max(high[0:index])
+    recent_low = min(low[0:index])
 
 
     #for date, prices in tsd.items():
@@ -139,8 +173,8 @@ for TICKER in ticker_list:
     print("-------------------------")
     print(f"LATEST DAY: {latest_date}")
     print(f"LATEST CLOSE: {to_usd(float(recent_close))}")
-    print(f"RECENT HIGH: {to_usd(float(recent_high))}")
-    print(f"RECENT LOW: {to_usd(float(recent_low))}")
+    print(f"52-Week HIGH: {to_usd(float(recent_high))}")
+    print(f"52-Week LOW: {to_usd(float(recent_low))}")
     print("-------------------------")
     print("RECOMMENDATION: BUY!")
     print("RECOMMENDATION REASON: TODO")
