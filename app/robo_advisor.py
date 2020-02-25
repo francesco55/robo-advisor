@@ -117,7 +117,7 @@ for TICKER in ticker_list:
 
     #this code finds the date a year ago today
     past_year = current_year - 1
-    past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" #format
+    past_date = f"{str(past_year)}-{current_month}-{current_day}" #format
     
     #print(current_year)
     #print(type(current_month))
@@ -130,18 +130,21 @@ for TICKER in ticker_list:
     #if there is no market data one year ago exactly, the day prior is checked until a valid date is found
     while past_date not in date:
         if current_day == "01":
-            current_month = f"0{str(int(current_month) - 1)}"
+            if current_month == "11" or current_month == "12":
+                current_month = str(int(current_month)-1)
+            else:
+                current_month = f"0{str(int(current_month) - 1)}"
             if current_month == "02":
                 current_day = "28"
             elif current_month == "09" or current_month == "04" or current_month == "06" or current_month == "11":
                 current_day = "30"
             else:
                 current_day = "31"
-        elif current_day[0] == "0":
+        elif current_day[0] == "0" or current_day == "10":
             current_day = f"0{str(int(current_day) - 1)}"
         else:
             current_day = str(int(current_day) - 1)
-        past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" #format
+        past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" 
 
     #we grab the index of the valid date 52 weeks ago and access the max within that
     index = date.index(past_date) #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
@@ -155,7 +158,7 @@ for TICKER in ticker_list:
 
     #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
     #writes data into csv file
-    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER}_prices.csv")
+    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER.lower()}_prices.csv")
 
     csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
 
@@ -178,7 +181,7 @@ for TICKER in ticker_list:
     print("-------------------------")
     next_output = input("Press enter to see my stock recommendation.")
     print("-------------------------")
-    print(f"SELECTED SYMBOL: {TICKER}")
+    print(f"SELECTED SYMBOL: {TICKER.upper()}")
     print("-------------------------")
     print("REQUESTING STOCK MARKET DATA...")
     print(f"REQUEST AT: {refreshed}")
@@ -188,8 +191,36 @@ for TICKER in ticker_list:
     print(f"52-Week HIGH: {to_usd(float(recent_high))}")
     print(f"52-Week LOW: {to_usd(float(recent_low))}")
     print("-------------------------")
-    print("RECOMMENDATION: BUY!")
-    print("RECOMMENDATION REASON: TODO")
+
+    #formulate recommendation
+
+    yr_average = sum(open_p[0:index])/(index + 1)
+    half_index = int(index/2)
+    half_yr_average = sum(open_p[0:half_index])/(half_index + 1)
+    high_threshold = min((1.5 * yr_average), (1.5 * half_yr_average))
+
+    decision = ""
+    reason = ""
+    if close[0] > high_threshold:
+        decision = "Sell"
+        reason = "The stock seems to be overvalued. It's price is much higher than recent averages."
+    elif half_yr_average > yr_average:
+        if close[0] > half_yr_average:
+            decision = "Buy"
+            reason = "This stock is steadily trending upwards."
+        else: #close[0] =< half_yr_average
+            decision = "Sell"
+            reason = "After recent, relative success, this stock seems to be falling in value."
+    else: #yr_average >= half_yr_average
+        if close[0] > half_yr_average:
+            decision = "Buy"
+            reason = "This stock seems to be rebounding from below average performance recently."
+        else: #close[0] =< half_yr_average:
+            decision = "Sell"
+            reason = "This stock seems to be struggling in performance as of late."
+
+    print(f"RECOMMENDATION: {decision}")
+    print(f"RECOMMENDATION REASON: {reason}")
     print("-------------------------")
     print(f"Writing to a CSV file: {csv_file_path} ... ")
     print("-------------------------")
