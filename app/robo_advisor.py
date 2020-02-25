@@ -8,6 +8,7 @@ import csv
 from keyword import iskeyword
 import plotly
 import plotly.graph_objs as go
+from twilio.rest import Client
 
 load_dotenv()
 
@@ -69,7 +70,8 @@ for TICKER in ticker_list:
         continue
 
     if "higher API call frequency" in response.text:
-        print("Error")
+        print("   ERROR   ")
+        print("The source for stock price data has given the following error message:")
         print(response.text)
         exit()
 
@@ -149,8 +151,10 @@ for TICKER in ticker_list:
     #we grab the index of the valid date 52 weeks ago and access the max within that
     index = date.index(past_date) #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
 
-    recent_high = max(high[0:index])
-    recent_low = min(low[0:index])
+    recent_high = high[0]
+    recent_low = low[0]
+    yr_high = max(high[0:index])
+    yr_low = min(low[0:index])
 
 
     #for date, prices in tsd.items():
@@ -191,6 +195,9 @@ for TICKER in ticker_list:
     print(f"52-Week HIGH: {to_usd(float(recent_high))}")
     print(f"52-Week LOW: {to_usd(float(recent_low))}")
     print("-------------------------")
+    print(f"52-Week HIGH: {to_usd(float(yr_high))}")
+    print(f"52-Week LOW: {to_usd(float(yr_low))}")
+    print("-------------------------")
 
     #formulate recommendation
 
@@ -221,9 +228,9 @@ for TICKER in ticker_list:
 
     print(f"RECOMMENDATION: {decision}")
     print(f"RECOMMENDATION REASON: {reason}")
+    print("Recommendations were made by comparing current stock price to 52 week and 26 week averages.")
     print("-------------------------")
     print(f"Writing to a CSV file: {csv_file_path} ... ")
-    print("-------------------------")
 
     # adapted from: https://plot.ly/python/getting-started/#initialization-for-offline-plotting
     plotly.offline.plot({
@@ -231,6 +238,29 @@ for TICKER in ticker_list:
     "layout": go.Layout(title=f"Stock Price over Time: {TICKER.upper()}")
     }, auto_open=True)
 
+    TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "OOPS, please specify env var called 'TWILIO_ACCOUNT_SID'")
+    TWILIO_AUTH_TOKEN  = os.environ.get("TWILIO_AUTH_TOKEN", "OOPS, please specify env var called 'TWILIO_AUTH_TOKEN'")
+    SENDER_SMS  = os.environ.get("SENDER_SMS", "OOPS, please specify env var called 'SENDER_SMS'")
+    RECIPIENT_SMS  = os.environ.get("RECIPIENT_SMS", "OOPS, please specify env var called 'RECIPIENT_SMS'")
+
+    # AUTHENTICATE
+
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+    
+
+    # COMPILE REQUEST PARAMETERS (PREPARE THE MESSAGE) and ISSUE REQUEST (SEND SMS)
+    percent_change = round((((close[0] - open_p[0])/open_p[0])*100), 2)
+    if percent_change > 4:
+        content = f"Hello, this is a message from your Investment RoboAdvisor. {TICKER.upper()} is up {percent_change}% since markets opened this morning!"
+        message = client.messages.create(to=RECIPIENT_SMS, from_=SENDER_SMS, body=content)
+    elif percent_change < -4:
+        percent_change = percent_change * (-1)
+        content = f"Hello, this is a message from your Investment RoboAdvisor. {TICKER.upper()} is down {percent_change}% since markets opened this morning."
+        message = client.messages.create(to=RECIPIENT_SMS, from_=SENDER_SMS, body=content)
+#
+    print("-------------------------")
     print("HAPPY INVESTING!")
     print("-------------------------")
+
 
