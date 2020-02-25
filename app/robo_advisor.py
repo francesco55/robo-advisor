@@ -55,8 +55,8 @@ while True:
 
 for TICKER in ticker_list:
     request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}&outputsize=full"
-    print("REQUESTING SOME DATA FROM THE INTERNET...")
     print("URL:", request_url)
+    print("REQUESTING SOME DATA FROM THE INTERNET...")
 
     response = requests.get(request_url)
 
@@ -160,30 +160,6 @@ for TICKER in ticker_list:
     #for date, prices in tsd.items():
     #    print(date)
 
-    #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
-    #writes data into csv file
-    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER.lower()}_prices.csv")
-
-    csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
-
-    with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
-        writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
-        writer.writeheader() # writes header
-
-        #https://www.youtube.com/watch?v=UXAVOP1oCog&t=847s
-        for d in date:
-            daily_data = tsd[d]
-            writer.writerow({"timestamp": d,
-            "open": daily_data["1. open"],
-            "high": daily_data["2. high"],
-            "low": daily_data["3. low"], 
-            "close": daily_data["4. close"],
-            "volume": daily_data["5. volume"]})
-
-
-
-    print("-------------------------")
-    next_output = input("Press enter to see my stock recommendation.")
     print("-------------------------")
     print(f"SELECTED SYMBOL: {TICKER.upper()}")
     print("-------------------------")
@@ -192,11 +168,13 @@ for TICKER in ticker_list:
     print("-------------------------")
     print(f"LATEST DAY: {latest_date}")
     print(f"LATEST CLOSE: {to_usd(float(recent_close))}")
-    print(f"52-Week HIGH: {to_usd(float(recent_high))}")
-    print(f"52-Week LOW: {to_usd(float(recent_low))}")
+    print(f"LATEST HIGH: {to_usd(float(recent_high))}")
+    print(f"LATEST LOW: {to_usd(float(recent_low))}")
     print("-------------------------")
     print(f"52-Week HIGH: {to_usd(float(yr_high))}")
     print(f"52-Week LOW: {to_usd(float(yr_low))}")
+    print("-------------------------")
+    next_output = input("Press enter to see my stock recommendation.")
     print("-------------------------")
 
     #formulate recommendation
@@ -230,13 +208,43 @@ for TICKER in ticker_list:
     print(f"RECOMMENDATION REASON: {reason}")
     print("Recommendations were made by comparing current stock price to 52 week and 26 week averages.")
     print("-------------------------")
+
+    #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
+    #writes data into csv file
+    csv_file_path = os.path.join(os.path.dirname(__file__), "..", "data", f"{TICKER.lower()}_prices.csv")
+
+    csv_headers = ["timestamp", "open", "high", "low", "close", "volume"]
+
     print(f"Writing to a CSV file: {csv_file_path} ... ")
+
+    with open(csv_file_path, "w") as csv_file: # "w" means "open the file for writing"
+        writer = csv.DictWriter(csv_file, fieldnames=csv_headers)
+        writer.writeheader() # writes header
+
+        #https://www.youtube.com/watch?v=UXAVOP1oCog&t=847s
+        for d in date:
+            daily_data = tsd[d]
+            writer.writerow({"timestamp": d,
+            "open": daily_data["1. open"],
+            "high": daily_data["2. high"],
+            "low": daily_data["3. low"], 
+            "close": daily_data["4. close"],
+            "volume": daily_data["5. volume"]})
+
+    print("-------------------------")
+    print("Graphing 52 week data ...")
 
     # adapted from: https://plot.ly/python/getting-started/#initialization-for-offline-plotting
     plotly.offline.plot({
-    "data": [go.Scatter(x= date, y= close)],
+    "data": [go.Scatter(x= date[0:index], y= close[0:index])],
     "layout": go.Layout(title=f"Stock Price over Time: {TICKER.upper()}")
     }, auto_open=True)
+
+    print("-------------------------")
+    print("HAPPY INVESTING!")
+    print("-------------------------")
+
+    #Send SMS if daily stock price change is greater than 4%
 
     TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "OOPS, please specify env var called 'TWILIO_ACCOUNT_SID'")
     TWILIO_AUTH_TOKEN  = os.environ.get("TWILIO_AUTH_TOKEN", "OOPS, please specify env var called 'TWILIO_AUTH_TOKEN'")
@@ -247,8 +255,6 @@ for TICKER in ticker_list:
 
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-    
-
     # COMPILE REQUEST PARAMETERS (PREPARE THE MESSAGE) and ISSUE REQUEST (SEND SMS)
     percent_change = round((((close[0] - open_p[0])/open_p[0])*100), 2)
     if percent_change > 4:
@@ -258,9 +264,5 @@ for TICKER in ticker_list:
         percent_change = percent_change * (-1)
         content = f"Hello, this is a message from your Investment RoboAdvisor. {TICKER.upper()} is down {percent_change}% since markets opened this morning."
         message = client.messages.create(to=RECIPIENT_SMS, from_=SENDER_SMS, body=content)
-#
-    print("-------------------------")
-    print("HAPPY INVESTING!")
-    print("-------------------------")
 
 
