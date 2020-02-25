@@ -206,7 +206,7 @@ for TICKER in ticker_list:
 
     print(f"RECOMMENDATION: {decision}")
     print(f"RECOMMENDATION REASON: {reason}")
-    print("Recommendations were made by comparing current stock price to 52 week and 26 week averages.")
+    print(f"Recommendations were made by comparing the current stock price to 52 week ({to_usd(float(yr_average))}) and 26 week ({to_usd(float(half_yr_average))}) averages.")
     print("-------------------------")
 
     #https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/modules/csv.md
@@ -232,6 +232,7 @@ for TICKER in ticker_list:
             "volume": daily_data["5. volume"]})
 
     print("-------------------------")
+    input("Press enter to see a graph of stock prices over time.")
     print("Graphing 52 week data ...")
 
     # adapted from: https://plot.ly/python/getting-started/#initialization-for-offline-plotting
