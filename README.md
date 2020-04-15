@@ -37,7 +37,7 @@ Your program will need an API Key to issue requests to the [AlphaVantage API](ht
 ALPHAVANTAGE_API_KEY= "" #enter your API key here
 ```
 
-## Twilio Setup
+## Twilio Setup (SMS)
 
 Twilio allows this application to send the user an SMS message given certain stock market conditions.
 
