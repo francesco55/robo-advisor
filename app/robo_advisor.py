@@ -13,17 +13,24 @@ from twilio.rest import Client
 load_dotenv()
 
 def to_usd(my_price):
+    """
+    Converts a numeric value to usd-formatted string, for printing and display purposes.
     
-    #Converts a numeric value to usd-formatted string, for printing and display purposes.
-    #Source: https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/datatypes/numbers.md#formatting-as-currency
-    #Param: my_price (int or float) like 4000.444444
-    #Example: to_usd(4000.444444)
-    #Returns: $4,000.44
+    Source: https://github.com/prof-rossetti/intro-to-python/blob/master/notes/python/datatypes/numbers.md#formatting-as-currency
     
+    Param: my_price (int or float) like 4000.444444
+    
+    Example: to_usd(4000.444444)
+    
+    Returns: $4,000.44
+    """
     return f"${my_price:,.2f}"
 
 #https://stackoverflow.com/questions/19859282/check-if-a-string-contains-a-number
 def hasNumbers(inputString):
+    """
+    accepts a string as an argument and returns a bool variable that yields true if a string has numbers and false if a string does not
+    """
      return any(char.isdigit() for char in inputString)
 
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
@@ -39,6 +46,7 @@ if __name__ == "__main__":
     # multiple tickers input and validation
     ticker_list = []
     ticker_max = 5
+
     while True:
         TICKER = input("Please enter a company's ticker: ")
         if TICKER.upper() == "DONE":
@@ -127,8 +135,9 @@ if __name__ == "__main__":
         #print(past_year)
         #print(past_date)
 
-        #the following code checks if there is market data for the date exactly one year ago
-        #if there is no market data one year ago exactly, the day prior is checked until a valid date is found
+        # the following code checks if there is market data for the date exactly one year ago
+        # if there is no market data one year ago exactly, the day prior is checked until a valid date is found
+
         while past_date not in date:
             if current_day == "01":
                 if current_month == "11" or current_month == "12":
@@ -244,7 +253,7 @@ if __name__ == "__main__":
         print("HAPPY INVESTING!")
         print("-------------------------")
 
-        #Send SMS if daily stock price change is greater than 4%
+        # Send SMS if daily stock price change is greater than 4%
 
         TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "OOPS, please specify env var called 'TWILIO_ACCOUNT_SID'")
         TWILIO_AUTH_TOKEN  = os.environ.get("TWILIO_AUTH_TOKEN", "OOPS, please specify env var called 'TWILIO_AUTH_TOKEN'")
