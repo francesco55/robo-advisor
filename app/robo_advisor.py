@@ -31,7 +31,7 @@ def hasNumbers(inputString):
     """
     accepts a string as an argument and returns a bool variable that yields true if a string has numbers and false if a string does not
     """
-     return any(char.isdigit() for char in inputString)
+    return any(char.isdigit() for char in inputString)
 
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
