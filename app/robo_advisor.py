@@ -47,7 +47,7 @@ def find_date(date):
 
     This function returns the date a year ago today or if the market was closed, the closest preceeding day where the market was open
     """
-     #cut the date variable into three variables
+    # cut the first element in the date list (the current date) into three variables
     #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
     current_year = int(date[0][0:4]) 
     current_month = date[0][5:7]
