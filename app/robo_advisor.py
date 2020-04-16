@@ -41,6 +41,42 @@ def create_url(TICKER, API_KEY):
    """
    return f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}&outputsize=full"
 
+def find_date(date):
+    """
+    This function accepts a list of dates as an argument: the dates are formatted "YYYY-MM-DD"
+
+    This function returns the date a year ago today or if the market was closed, the closest preceeding day where the market was open
+    """
+     #cut the date variable into three variables
+    #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
+    current_year = int(date[0][0:4]) 
+    current_month = date[0][5:7]
+    current_day = date[0][8:10]
+    #find the date a year ago today
+    past_year = current_year - 1
+    past_date = f"{str(past_year)}-{current_month}-{current_day}" #format
+    
+    # check if there is market data for the date exactly one year ago
+    # if there is no market data one year ago exactly, the day prior is checked until a valid date is found
+    while past_date not in date:
+        if current_day == "01":
+            if current_month == "11" or current_month == "12":
+                current_month = str(int(current_month)-1)
+            else:
+                current_month = f"0{str(int(current_month) - 1)}"
+            if current_month == "02":
+                current_day = "28"
+            elif current_month == "09" or current_month == "04" or current_month == "06" or current_month == "11":
+                current_day = "30"
+            else:
+                current_day = "31"
+        elif current_day[0] == "0" or current_day == "10":
+            current_day = f"0{str(int(current_day) - 1)}"
+        else:
+            current_day = str(int(current_day) - 1)
+        past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}"
+    return past_date
+
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
 if __name__ == "__main__":
@@ -99,7 +135,6 @@ if __name__ == "__main__":
         recent_close = tsd[str(date[0])]["4. close"]
         latest_date = date[0]
 
-
         #this and the following for loop creates lists parallel to the date list
         open_p = []
         high = []
@@ -119,39 +154,9 @@ if __name__ == "__main__":
             current_volume = float(tsd[d]["5. volume"])
             volume.append(current_volume)
 
-        #cut the date variable into three variables
-        #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
-        current_year = int(date[0][0:4]) 
-        current_month = date[0][5:7]
-        current_day = date[0][8:10]
-
-        #find the date a year ago today
-        past_year = current_year - 1
-        past_date = f"{str(past_year)}-{current_month}-{current_day}" #format
-        
-
-        # check if there is market data for the date exactly one year ago
-        # if there is no market data one year ago exactly, the day prior is checked until a valid date is found
-        while past_date not in date:
-            if current_day == "01":
-                if current_month == "11" or current_month == "12":
-                    current_month = str(int(current_month)-1)
-                else:
-                    current_month = f"0{str(int(current_month) - 1)}"
-                if current_month == "02":
-                    current_day = "28"
-                elif current_month == "09" or current_month == "04" or current_month == "06" or current_month == "11":
-                    current_day = "30"
-                else:
-                    current_day = "31"
-            elif current_day[0] == "0" or current_day == "10":
-                current_day = f"0{str(int(current_day) - 1)}"
-            else:
-                current_day = str(int(current_day) - 1)
-            past_date = f"{str(past_year)}-{str(current_month)}-{str(current_day)}" 
-
-        #we grab the index of the valid date 52 weeks ago and access the max within that
-        index = date.index(past_date) #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
+        # Do Relevant Calculations
+        # The following line calls the find_date function and then finds this date's index in order to call that index on parallel lists
+        index = date.index(find_date(date)) #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
 
         recent_high = high[0]
         recent_low = low[0]

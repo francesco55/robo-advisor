@@ -1,6 +1,6 @@
 
 
-from app.robo_advisor import to_usd, hasNumbers, create_url
+from app.robo_advisor import to_usd, hasNumbers, create_url, find_date
 
 def test_to_usd():
      """
@@ -29,3 +29,10 @@ def test_create_url():
     TICKER = "TICKER"
     KEY = "KEY"
     assert create_url(TICKER,KEY) == "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=TICKER&apikey=KEY&outputsize=full"
+
+def test_find_date():
+    """
+    tests that find_date() returns the correct date
+    """
+    date = ["2020-04-20","2019-04-21","2019-04-19"]
+    assert find_date(date) == "2019-04-19"
