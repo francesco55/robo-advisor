@@ -33,6 +33,14 @@ def hasNumbers(inputString):
     """
     return any(char.isdigit() for char in inputString)
 
+def create_url(TICKER, API_KEY):
+   """
+    This function accepts two strings as arguments: a stock ticker and an API key
+
+    Returns a properly formatted url to grab stock market data from Alpha Vantage
+   """
+   return f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}&outputsize=full"
+
 API_KEY = os.getenv("ALPHAVANTAGE_API_KEY")
 
 if __name__ == "__main__":
@@ -41,12 +49,11 @@ if __name__ == "__main__":
     print("Enter the tickers one by one. Enter 'DONE' when you are finished entering tickers.")
     print("Thank you!")
 
-
-    # adapted from shopping_cart.py
-    # multiple tickers input and validation
     ticker_list = []
     ticker_max = 5
 
+    # adapted from shopping_cart.py
+    # multiple tickers input and validation
     while True:
         TICKER = input("Please enter a company's ticker: ")
         if TICKER.upper() == "DONE":
@@ -61,7 +68,7 @@ if __name__ == "__main__":
             ticker_list.append(TICKER)
 
     for TICKER in ticker_list:
-        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={TICKER}&apikey={API_KEY}&outputsize=full"
+        request_url = create_url(TICKER, API_KEY)
         print("URL:", request_url)
         print("REQUESTING SOME DATA FROM THE INTERNET...")
 
@@ -82,12 +89,12 @@ if __name__ == "__main__":
             print(response.text)
             exit()
 
+        # load data locally
         parsed_response = json.loads(response.text)
-        #print(parsed_response)
         refreshed = parsed_response["Meta Data"]["3. Last Refreshed"]
-
         tsd = parsed_response["Time Series (Daily)"]
 
+        # find relevant dates
         date = list(tsd.keys()) #https://stackoverflow.com/questions/30362391/how-do-you-find-the-first-key-in-a-dictionary
         recent_close = tsd[str(date[0])]["4. close"]
         latest_date = date[0]
@@ -112,32 +119,19 @@ if __name__ == "__main__":
             current_volume = float(tsd[d]["5. volume"])
             volume.append(current_volume)
 
-        #print(open_p)
-        #print(high)
-        #print(low)
-        #print(close)
-        #print(volume)
-
-        #this code cuts the date variable into three variables
+        #cut the date variable into three variables
         #https://www.pythoncentral.io/cutting-and-slicing-strings-in-python/
         current_year = int(date[0][0:4]) 
         current_month = date[0][5:7]
         current_day = date[0][8:10]
 
-        #this code finds the date a year ago today
+        #find the date a year ago today
         past_year = current_year - 1
         past_date = f"{str(past_year)}-{current_month}-{current_day}" #format
         
-        #print(current_year)
-        #print(type(current_month))
-        #print(current_month)
-        #print(current_day)
-        #print(past_year)
-        #print(past_date)
 
-        # the following code checks if there is market data for the date exactly one year ago
+        # check if there is market data for the date exactly one year ago
         # if there is no market data one year ago exactly, the day prior is checked until a valid date is found
-
         while past_date not in date:
             if current_day == "01":
                 if current_month == "11" or current_month == "12":
@@ -164,10 +158,7 @@ if __name__ == "__main__":
         yr_high = max(high[0:index])
         yr_low = min(low[0:index])
 
-
-        #for date, prices in tsd.items():
-        #    print(date)
-
+        # Display Output
         print("-------------------------")
         print(f"SELECTED SYMBOL: {TICKER.upper()}")
         print("-------------------------")

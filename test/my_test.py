@@ -1,6 +1,6 @@
 
 
-from app.robo_advisor import to_usd, hasNumbers
+from app.robo_advisor import to_usd, hasNumbers, create_url
 
 def test_to_usd():
      """
@@ -21,3 +21,11 @@ def test_hasNumbers():
     good_string = "tsla"
     assert hasNumbers(bad_string) == True
     assert hasNumbers(good_string) == False
+
+def test_create_url():
+    """
+    tests that create_url() correctly returns a formatted string
+    """
+    TICKER = "TICKER"
+    KEY = "KEY"
+    assert create_url(TICKER,KEY) == "https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=TICKER&apikey=KEY&outputsize=full"
